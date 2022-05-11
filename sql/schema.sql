@@ -7,5 +7,6 @@ CREATE TABLE IF NOT EXISTS secrets (
   secret_type VARCHAR(255) NOT NULL,
   secret_uuid VARCHAR(1024) NOT NULL,
   secret_expire DATETIME,
+  secret_expire BOOLEAN,
   created_at TIMESTAMP DEFAULT TO CURRENT_TIMESTAMP
 );

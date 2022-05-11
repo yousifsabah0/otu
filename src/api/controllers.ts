@@ -1,23 +1,37 @@
 import { Request, Response, NextFunction } from "express";
+import { execute } from "./database/query";
+import { v4 } from "uuid";
 import OTU from "../lib/OTU";
 
 const otu = new OTU(String(process.env.SECRET));
 
+const date = new Date();
+const EXPIRE_AFTER_ONE_DAY = date.setTime(
+  date.getTime() + 1 * 24 * 60 * 60 * 1000
+);
+
 export const encrypt = (req: Request, res: Response, next: NextFunction) => {
   // Parse body data
-  let { message, expires } = req.body;
+  let { message } = req.body;
+  let secretType: string;
 
   if (req.file) {
-    console.log(req.file);
     message = req.file.filename;
+    secretType = "image";
   }
 
   const encrypted = otu.encrypt(message);
+  secretType = "message";
+
+  execute(
+    "INSERT INTO secrets (secret_type, secret_uuid, secret_expire, expired) VALUES (?, ?, ?, ?)",
+    [secretType, v4(), EXPIRE_AFTER_ONE_DAY, false]
+  );
 
   return res.status(200).json({
     status: "success",
     encrypted,
-    expires,
+    info: "Please note that this message will be expire after 24 hours from now.",
   });
 };
 
